@@ -1,24 +1,22 @@
 const { exec } = require('child_process')
-const execPromise = require('util').promisify(exec);
+const fs = require('fs');
+const https = require('https');
+/* must $sudo apt-get install mpg123 */
 
-// must $sudo apt-get install mpg123
+const downloadAndPlay = (uri, fn) => {
+  const file = fs.createWriteStream('./audio.mp3');
+  https.get(uri, res => {
+    res.pipe(file);
+    file.on('finish', () => fn('./audio.mp3'));
+  });
+};
 
-/* LINUX PLAY COMMAND */
-const linuxPlay = path => `mpg123 ${path}`
-const linuxStop = () => exec('pkill mpg123');
+const play = path => exec(`mpg123 ${path}`);
 
-const play = async path => {
-  const playCommand =
-    linuxPlay(path);
-  try {
-    await execPromise(playCommand)
-  } catch (err) {
-    throw err
-  }
-}
+const stop = () => exec('pkill mpg123');
 
-play('./sw.mp3');
-
-setTimeout(() => {
-  linuxStop();
-}, 3000);
+module.exports = {
+  downloadAndPlay,
+  play,
+  stop,
+};
